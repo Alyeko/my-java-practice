@@ -1,4 +1,39 @@
-<Container fluid="md-4" style={{marginLeft: "4%", marginTop: "2%", width: "93%"}}>
+import React, { useState, useEffect } from "react";
+import { getBondDetails} from "../../services/BondServices";
+import Table from 'react-bootstrap/Table';
+import { useParams } from 'react-router-dom';
+import Button from 'react-bootstrap/Button';
+import Container from 'react-bootstrap/Container';
+import '../../App.css';
+
+const ViewBond = (props) => {
+  const bondId  = props.info;
+  console.log(props);
+  
+  // const bondId  = 1;
+  const [bondDetails, setBondDetails] = useState({});
+  useEffect(() => {
+    // Fetch bond details using bondId
+    getBondDetails(bondId)
+    .then(res => {
+      console.log(res.data)
+      setBondDetails(res.data);
+    })
+    .catch(err => {
+      setBondDetails([]);
+        console.log(err);
+    })
+    // console.log(bondId)
+  }, [bondId]);
+  return (
+    <>
+    <div className="list-group text-center">
+        <div className="d-flex justify-content-between subnav">
+          <h5 style={{marginLeft: "4.5%", marginTop: "1%"}}>Bond: {bondDetails.bondId}</h5>
+          
+        </div>
+      </div>
+      <Container fluid="md-4" style={{marginLeft: "4%", marginTop: "2%", width: "93%"}}>
           <Table className="table-light" >
             <thead>
               <tr>
@@ -26,20 +61,20 @@
             </tbody>
           </Table>
         </Container>
-        <Container fluid="md-4" style={{marginLeft: "4%", marginTop: "52%", width: "63%"}} >
+        <Container fluid="md-4" style={{marginLeft: "4%", marginTop: "22%", width: "93%"}} >
             <Table className="table-light" >
             <thead>
               <tr>
                 <th>ISIN</th>
-                <th>BookId</th>
+                <th>Book Id</th>
                 <th>Client</th>
                 <th>Status</th>
                 <th>Quantity</th>
-                <th>UnitPrice</th>
+                <th>Unit Price</th>
                 <th>Currency</th>
                 <th>Buy/Sell</th>
-                <th>TradeDate</th>
-                <th>SettlementDate</th>
+                <th>Trade Date</th>
+                <th>Settlement Date</th>
 
               </tr>
             </thead>
@@ -59,3 +94,13 @@
             </tbody>
             </Table>
             </Container>
+
+        
+
+    </>
+  )
+};
+
+
+
+export default ViewBond;
