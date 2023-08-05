@@ -5,20 +5,34 @@ import Container from 'react-bootstrap/Container';
 import { BondDetail } from "./BondDetail";
 import { getAllBonds } from '../../services/BondServices';
 import Dropdown from 'react-bootstrap/Dropdown';
+import Form from 'react-bootstrap/Form';
+
 
 const AllBonds = () => {
     const [bonds, setBonds] = useState([]);
+    const [bondData, setBondData] = useState([]);
     const [sortOrder, setSortOrder] = useState('asc_id');
+    const [showNext, setShowNext] = useState(false);
+    const [showPrev, setShowPrev] = useState(false);    
+    const [showToday, setShowToday] = useState(false);
+
 
     useEffect(() => {
         getBondsFromAPI();
+        // handleSortClick('asc_id');
     }, []);
+
+    useEffect(() => {
+        filterBonds();
+    }, [showPrev, showNext, showToday]);
+
 
     const getBondsFromAPI = () => {
         getAllBonds()
             .then(res => {
                 console.log(res.data)
                 setBonds(res.data);
+                setBondData(res.data);
             })
             .catch(err => {
                 setBonds([]);
@@ -26,7 +40,10 @@ const AllBonds = () => {
             })
     }
 
+
+
     const handleSortClick = (order) => {
+
         const sortedBonds = [...bonds].sort((a, b) => {
             if (order === 'asc_id') {
                 return a.bondId - b.bondId;
@@ -45,13 +62,90 @@ const AllBonds = () => {
         setSortOrder(order);
     }
 
+    const handleShowPrev = (event) => {
+        setShowPrev(event.target.checked);
+        filterBonds()
+    }
+
+    const handleShowNext = (event) => {
+        setShowNext(event.target.checked);
+        filterBonds()
+    }
+
+    const handleShowToday = (event) => {
+        setShowToday(event.target.checked);
+        filterBonds()
+    }
+
+    const filterBonds = () => {
+
+
+        const filteredBonds = bondData.filter((bond) => {
+            const dateOffset = (24*60*60*1000) * 5;
+            const currentDate = new Date('2021-08-05');
+            const prev5Date = new Date(currentDate - dateOffset);
+            const next5Date = new Date(currentDate + dateOffset)
+            const bondDate = new Date(bond.bondMaturityDate);
+
+            const isPrev = bondDate > prev5Date && bondDate < currentDate;
+            const isNext = bondDate < next5Date && bondDate > currentDate;
+            //const isToday = bondDate.getTime()==currentDate.getTime();
+            const isToday = bondDate.getFullYear() === currentDate.getFullYear() &&
+                            bondDate.getMonth() === currentDate.getMonth() &&
+                            bondDate.getDate() === currentDate.getDate()
+
+            if (showPrev && showNext && showToday) {
+                return isPrev || isNext;
+            } else if (showPrev) {
+                return isPrev;}
+             else if (showNext) {
+                return isNext;
+            } else if (showToday) {
+                return isToday;
+            }
+              else {
+                return true;
+            }
+        });
+
+
+        setBonds(filteredBonds);
+    }
+
+
+
+
 
     return (
         <>
             <div className="list-group text-center">
                 <div className="d-flex justify-content-between subnav">
                     <h5 style={{ marginLeft: "4.5%", marginTop: "1%" }}>All Active Bonds</h5>
-                    <Dropdown>
+                    <span style={{ marginLeft: "45%", textAlign: "left"}}>
+                    
+                    <Form.Check
+                        type="checkbox"
+                        label="Matures Today"
+                        checked={showToday}
+                        onChange={handleShowToday}
+                        style={{ marginLeft: "10px", marginTop: "1%" }}
+                    />
+
+                    <Form.Check
+                        type="checkbox"
+                        label="Matured in Previous 5 Days"
+                        checked={showPrev}
+                        onChange={handleShowPrev}
+                        style={{ marginLeft: "10px", marginTop: "1%" }}
+                    />
+                    <Form.Check
+                        type="checkbox"
+                        label="Matures in Next 5 Days"
+                        checked={showNext}
+                        onChange={handleShowNext}
+                        style={{ marginLeft: "10px", marginTop: "1%" }}
+                    /></span>
+                    <Dropdown style={ {marginTop: "0.5%"} }>
                         <Dropdown.Toggle variant="primary" className="btn btn-secondary" id="sort">
                             Sort: {sortOrder === 'asc_id'
                             ? 'Ascending ID'
@@ -73,6 +167,7 @@ const AllBonds = () => {
 
                         </Dropdown.Menu>
                     </Dropdown>
+                    
                 </div>
             </div>
             <h4 style={{ marginLeft: "4.5%", marginTop: "2%", marginBottom: "1%" }}> Total count is: <small className="text-body-secondary">{bonds.length}</small></h4>
